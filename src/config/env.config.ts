@@ -152,10 +152,10 @@ export class ConfigService {
   private loadEnv() {
     this.env = !(process.env?.DOCKER_ENV === 'true') ? this.envYaml() : this.envProcess();
     this.env.PRODUCTION = process.env?.NODE_ENV === 'PROD';
-    if (process.env?.DOCKER_ENV === 'true') {
-      this.env.SERVER.TYPE = 'http';
-      this.env.SERVER.PORT = 8080;
-    }
+    // if (process.env?.DOCKER_ENV === 'true') {
+    //   this.env.SERVER.TYPE = 'http';
+    //   this.env.SERVER.PORT = 8080;
+    // }
   }
 
   private envYaml(): Env {
@@ -224,9 +224,7 @@ export class ConfigService {
         COLOR: process.env?.LOG_COLOR === 'true',
         BAILEYS: (process.env?.LOG_BAILEYS as LogBaileys) || 'error',
       },
-      DEL_INSTANCE: process.env?.DEL_INSTANCE === 'true'
-        ? 5
-        : Number.parseInt(process.env.DEL_INSTANCE) || false,
+      DEL_INSTANCE: process.env?.DEL_INSTANCE === 'true' ? 5 : Number.parseInt(process.env.DEL_INSTANCE) || false,
       WEBHOOK: {
         GLOBAL: {
           URL: process.env?.WEBHOOK_GLOBAL_URL,
