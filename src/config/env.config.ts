@@ -166,7 +166,7 @@ export class ConfigService {
     return {
       SERVER: {
         TYPE: process.env.SERVER_TYPE as 'http' | 'https',
-        PORT: Number.parseInt(process.env.SERVER_PORT),
+        PORT: Number.parseInt(process.env.PORT),
         URL: process.env.SERVER_URL,
       },
       CORS: {
