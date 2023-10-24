@@ -914,7 +914,7 @@ export class ChatwootService {
           },
         };
 
-        await waInstance?.audioWhatsapp(data);
+        await waInstance?.audioWhatsapp(data, true);
 
         this.logger.verbose('audio sent');
         return;
@@ -939,7 +939,7 @@ export class ChatwootService {
         data.mediaMessage.caption = caption;
       }
 
-      await waInstance?.mediaMessage(data);
+      await waInstance?.mediaMessage(data, true);
 
       this.logger.verbose('media sent');
       return;
@@ -1074,7 +1074,7 @@ export class ChatwootService {
               },
             };
 
-            await waInstance?.textMessage(data);
+            await waInstance?.textMessage(data, true);
           }
         }
       }
@@ -1132,7 +1132,7 @@ export class ChatwootService {
       thumbnailUrl: string;
       sourceUrl: string;
     }
-    const adsMessage: AdsMessage | undefined = msg.extendedTextMessage?.contextInfo.externalAdReply;
+    const adsMessage: AdsMessage | undefined = msg.extendedTextMessage?.contextInfo?.externalAdReply;
 
     this.logger.verbose('Get ads message if it exist');
     adsMessage && this.logger.verbose('Ads message: ' + adsMessage);
@@ -1279,7 +1279,7 @@ export class ChatwootService {
         return null;
       }
 
-      if (event === 'messages.upsert') {
+      if (event === 'messages.upsert' || event === 'send.message') {
         this.logger.verbose('event messages.upsert');
 
         if (body.key.remoteJid === 'status@broadcast') {

@@ -42,6 +42,7 @@ if (!httpServer.HIDE_INDEX)
       status: HttpStatus.OK,
       message: 'Welcome to the Evolution API, it is working!',
       version: packageJson.version,
+      documentation: `${req.protocol}://${req.get('host')}/docs`,
     });
   });
 if (!httpServer.HIDE_MANAGER) router.use('/manager', new ViewsRouter().router);
