@@ -35,6 +35,7 @@ const httpServer = configService.get<HttpServer>('SERVER');
 const guards = [instanceExistsGuard, instanceLoggedGuard, authGuard[authType]];
 
 const packageJson = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
+
 if (!httpServer.HIDE_INDEX)
   router.get('/', (req, res) => {
     res.status(HttpStatus.OK).json({
@@ -44,6 +45,7 @@ if (!httpServer.HIDE_INDEX)
     });
   });
 if (!httpServer.HIDE_MANAGER) router.use('/manager', new ViewsRouter().router);
+
 router
   .use('/instance', new InstanceRouter(configService, ...guards).router)
   .use('/message', new MessageRouter(...guards).router)

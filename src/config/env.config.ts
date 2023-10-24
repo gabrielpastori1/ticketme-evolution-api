@@ -166,12 +166,15 @@ export class ConfigService {
   }
 
   private loadEnv() {
-    this.env = !(process.env?.DOCKER_ENV === 'true') ? this.envYaml() : this.envProcess();
+    this.env =
+      !(process.env?.DOCKER_ENV === 'true') && !(process.env?.HEROKU_ENV === 'true')
+        ? this.envYaml()
+        : this.envProcess();
     this.env.PRODUCTION = process.env?.NODE_ENV === 'PROD';
-    // if (process.env?.DOCKER_ENV === 'true') {
-    //   this.env.SERVER.TYPE = 'http';
-    //   this.env.SERVER.PORT = 8080;
-    // }
+//     if ((process.env?.DOCKER_ENV === 'true', process.env?.HEROKU_ENV === 'true')) {
+//       this.env.SERVER.TYPE = 'http';
+//       this.env.SERVER.PORT = parseInt(process.env.PORT) || 8080;
+//     }
   }
 
   private envYaml(): Env {
@@ -182,14 +185,14 @@ export class ConfigService {
     return {
       SERVER: {
         TYPE: process.env.SERVER_TYPE as 'http' | 'https',
-        PORT: Number.parseInt(process.env.SERVER_PORT) || 8080,
+        PORT: Number.parseInt(process.env.SERVER_PORT || process.env.PORT) || 8080,
         URL: process.env.SERVER_URL,
         HIDE_INDEX: process.env?.SERVER_HIDE_INDEX === 'true',
         HIDE_MANAGER: process.env?.SERVER_HIDE_MANAGER === 'true',
       },
       CORS: {
-        ORIGIN: process.env.CORS_ORIGIN.split(',') || ['*'],
-        METHODS: (process.env.CORS_METHODS.split(',') as HttpMethods[]) || ['POST', 'GET', 'PUT', 'DELETE'],
+        ORIGIN: process.env.CORS_ORIGIN?.split(',') || ['*'],
+        METHODS: (process.env.CORS_METHODS?.split(',') as HttpMethods[]) || ['POST', 'GET', 'PUT', 'DELETE'],
         CREDENTIALS: process.env?.CORS_CREDENTIALS === 'true',
       },
       SSL_CONF: {
@@ -213,7 +216,7 @@ export class ConfigService {
       },
       DATABASE: {
         CONNECTION: {
-          URI: process.env.DATABASE_CONNECTION_URI || '',
+          URI: process.env.DATABASE_CONNECTION_URI || process.env.DATABASE_CONNECTION_URL || '',
           DB_PREFIX_NAME: process.env.DATABASE_CONNECTION_DB_PREFIX_NAME || 'evolution',
         },
         ENABLED: process.env?.DATABASE_ENABLED === 'true',
