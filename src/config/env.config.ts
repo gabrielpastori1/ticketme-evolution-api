@@ -72,12 +72,16 @@ export type Rabbitmq = {
   URI: string;
 };
 
-export type Websocket = {
+export type Sqs = {
   ENABLED: boolean;
+  ACCESS_KEY_ID: string;
+  SECRET_ACCESS_KEY: string;
+  ACCOUNT_ID: string;
+  REGION: string;
 };
 
-export type Chatwoot = {
-  USE_REPLY_ID: boolean;
+export type Websocket = {
+  ENABLED: boolean;
 };
 
 export type EventsWebhook = {
@@ -130,6 +134,7 @@ export type SslConf = { PRIVKEY: string; FULLCHAIN: string };
 export type Webhook = { GLOBAL?: GlobalWebhook; EVENTS: EventsWebhook };
 export type ConfigSessionPhone = { CLIENT: string; NAME: string };
 export type QrCode = { LIMIT: number; COLOR: string };
+export type Typebot = { API_VERSION: string };
 export type Production = boolean;
 
 export interface Env {
@@ -141,15 +146,16 @@ export interface Env {
   DATABASE: Database;
   REDIS: Redis;
   RABBITMQ: Rabbitmq;
+  SQS: Sqs;
   WEBSOCKET: Websocket;
   LOG: Log;
   DEL_INSTANCE: DelInstance;
   WEBHOOK: Webhook;
   CONFIG_SESSION_PHONE: ConfigSessionPhone;
   QRCODE: QrCode;
+  TYPEBOT: Typebot;
   AUTHENTICATION: Auth;
   PRODUCTION?: Production;
-  CHATWOOT?: Chatwoot;
 }
 
 export type Key = keyof Env;
@@ -237,6 +243,13 @@ export class ConfigService {
         ENABLED: process.env?.RABBITMQ_ENABLED === 'true',
         URI: process.env.RABBITMQ_URI || '',
       },
+      SQS: {
+        ENABLED: process.env?.SQS_ENABLED === 'true',
+        ACCESS_KEY_ID: process.env.SQS_ACCESS_KEY_ID || '',
+        SECRET_ACCESS_KEY: process.env.SQS_SECRET_ACCESS_KEY || '',
+        ACCOUNT_ID: process.env.SQS_ACCOUNT_ID || '',
+        REGION: process.env.SQS_REGION || '',
+      },
       WEBSOCKET: {
         ENABLED: process.env?.WEBSOCKET_ENABLED === 'true',
       },
@@ -298,6 +311,9 @@ export class ConfigService {
         LIMIT: Number.parseInt(process.env.QRCODE_LIMIT) || 30,
         COLOR: process.env.QRCODE_COLOR || '#198754',
       },
+      TYPEBOT: {
+        API_VERSION: process.env?.TYPEBOT_API_VERSION || 'old',
+      },
       AUTHENTICATION: {
         TYPE: process.env.AUTHENTICATION_TYPE as 'apikey',
         API_KEY: {
@@ -310,9 +326,6 @@ export class ConfigService {
             : 3600,
           SECRET: process.env.AUTHENTICATION_JWT_SECRET || 'L=0YWt]b2w[WF>#>:&E`',
         },
-      },
-      CHATWOOT: {
-        USE_REPLY_ID: process.env?.USE_REPLY_ID === 'true',
       },
     };
   }
