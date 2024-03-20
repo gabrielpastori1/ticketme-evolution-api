@@ -10,9 +10,13 @@ export class ChatwootRaw {
   url?: string;
   name_inbox?: string;
   sign_msg?: boolean;
+  sign_delimiter?: string;
   number?: string;
   reopen_conversation?: boolean;
   conversation_pending?: boolean;
+  import_contacts?: boolean;
+  import_messages?: boolean;
+  days_limit_import_messages?: number;
 }
 
 const chatwootSchema = new Schema<ChatwootRaw>({
@@ -23,9 +27,13 @@ const chatwootSchema = new Schema<ChatwootRaw>({
   url: { type: String, required: true },
   name_inbox: { type: String, required: true },
   sign_msg: { type: Boolean, required: true },
+  sign_delimiter: { type: String, required: false },
   number: { type: String, required: true },
   reopen_conversation: { type: Boolean, required: true },
   conversation_pending: { type: Boolean, required: true },
+  import_contacts: { type: Boolean, required: true },
+  import_messages: { type: Boolean, required: true },
+  days_limit_import_messages: { type: Number, required: true },
 });
 
 export const ChatwootModel = dbserver?.model(ChatwootRaw.name, chatwootSchema, 'chatwoot');

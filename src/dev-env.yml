@@ -9,8 +9,8 @@ SERVER:
   TYPE: http # https
   PORT: 8080 # 443
   URL: localhost
-  HIDE_INDEX: false 
-  HIDE_MANAGER: false
+  DISABLE_MANAGER: false
+  DISABLE_DOCS: false
 
 CORS:
   ORIGIN:
@@ -47,6 +47,7 @@ LOG:
 # Default time: 5 minutes
 # If you don't even want an expiration, enter the value false
 DEL_INSTANCE: false # or false
+DEL_TEMP_INSTANCES: true # Delete instances with status closed on start
 
 # Temporary data storage
 STORE:
@@ -83,6 +84,8 @@ REDIS:
 
 RABBITMQ:
   ENABLED: false
+  MODE: "global"
+  EXCHANGE_NAME: "evolution_exchange"
   URI: "amqp://guest:guest@localhost:5672"
 
 SQS:
@@ -94,6 +97,12 @@ SQS:
 
 WEBSOCKET:
   ENABLED: false
+
+WA_BUSINESS:
+  TOKEN_WEBHOOK: evolution
+  URL: https://graph.facebook.com
+  VERSION: v18.0
+  LANGUAGE: pt_BR
 
 # Global Webhook Settings
 # Each instance's Webhook URL and events will be requested at the time it is created
@@ -126,6 +135,8 @@ WEBHOOK:
     GROUP_UPDATE: true
     GROUP_PARTICIPANTS_UPDATE: true
     CONNECTION_UPDATE: true
+    LABELS_EDIT: true
+    LABELS_ASSOCIATION: true
     CALL: true
     # This event fires every time a new token is requested via the refresh route
     NEW_JWT_TOKEN: false
@@ -149,7 +160,31 @@ QRCODE:
   COLOR: "#198754"
 
 TYPEBOT:
-  API_VERSION: 'old' # old | latest
+  API_VERSION: "old" # old | latest
+  KEEP_OPEN: false
+
+CHATWOOT:
+  # If you leave this option as false, when deleting the message for everyone on WhatsApp, it will not be deleted on Chatwoot.
+  MESSAGE_DELETE: true # false | true
+  # If you leave this option as true, when sending a message in Chatwoot, the client's last message will be marked as read on WhatsApp.
+  MESSAGE_READ: false # false | true
+  IMPORT:
+    # This db connection is used to import messages from whatsapp to chatwoot database
+    DATABASE:
+      CONNECTION:
+        URI: "postgres://user:password@hostname:port/dbname"
+    PLACEHOLDER_MEDIA_MESSAGE: true
+
+# Cache to optimize application performance
+CACHE:
+  REDIS:
+    ENABLED: false
+    URI: "redis://localhost:6379"
+    PREFIX_KEY: "evolution-cache"
+    TTL: 604800
+  LOCAL:
+    ENABLED: false
+    TTL: 86400
 
 # Defines an authentication type for the api
 # We recommend using the apikey because it will allow you to use a custom token,
@@ -166,3 +201,5 @@ AUTHENTICATION:
   JWT:
     EXPIRIN_IN: 0 # seconds - 3600s === 1h | zero (0) - never expires
     SECRET: L=0YWt]b2w[WF>#>:&E`
+
+LANGUAGE: "pt-BR" # pt-BR, en

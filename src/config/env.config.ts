@@ -7,8 +7,8 @@ export type HttpServer = {
   TYPE: 'http' | 'https';
   PORT: number;
   URL: string;
-  HIDE_INDEX: boolean;
-  HIDE_MANAGER: boolean;
+  DISABLE_DOCS: boolean;
+  DISABLE_MANAGER: boolean;
 };
 
 export type HttpMethods = 'POST' | 'GET' | 'PUT' | 'DELETE';
@@ -34,6 +34,7 @@ export type SaveData = {
   MESSAGE_UPDATE: boolean;
   CONTACTS: boolean;
   CHATS: boolean;
+  LABELS: boolean;
 };
 
 export type StoreConf = {
@@ -41,6 +42,7 @@ export type StoreConf = {
   MESSAGE_UP: boolean;
   CONTACTS: boolean;
   CHATS: boolean;
+  LABELS: boolean;
 };
 
 export type CleanStoreConf = {
@@ -69,6 +71,8 @@ export type Redis = {
 
 export type Rabbitmq = {
   ENABLED: boolean;
+  MODE: string; // global, single, isolated
+  EXCHANGE_NAME: string; // available for global and single, isolated mode will use instance name as exchange
   URI: string;
 };
 
@@ -84,8 +88,17 @@ export type Websocket = {
   ENABLED: boolean;
 };
 
+export type WaBusiness = {
+  TOKEN_WEBHOOK: string;
+  URL: string;
+  VERSION: string;
+  LANGUAGE: string;
+};
+
 export type EventsWebhook = {
   APPLICATION_STARTUP: boolean;
+  INSTANCE_CREATE: boolean;
+  INSTANCE_DELETE: boolean;
   QRCODE_UPDATED: boolean;
   MESSAGES_SET: boolean;
   MESSAGES_UPSERT: boolean;
@@ -101,6 +114,8 @@ export type EventsWebhook = {
   CHATS_DELETE: boolean;
   CHATS_UPSERT: boolean;
   CONNECTION_UPDATE: boolean;
+  LABELS_EDIT: boolean;
+  LABELS_ASSOCIATION: boolean;
   GROUPS_UPSERT: boolean;
   GROUP_UPDATE: boolean;
   GROUP_PARTICIPANTS_UPDATE: boolean;
@@ -125,16 +140,42 @@ export type Auth = {
 
 export type DelInstance = number | boolean;
 
+export type Language = string | 'en';
+
 export type GlobalWebhook = {
   URL: string;
   ENABLED: boolean;
   WEBHOOK_BY_EVENTS: boolean;
 };
+export type CacheConfRedis = {
+  ENABLED: boolean;
+  URI: string;
+  PREFIX_KEY: string;
+  TTL: number;
+};
+export type CacheConfLocal = {
+  ENABLED: boolean;
+  TTL: number;
+};
 export type SslConf = { PRIVKEY: string; FULLCHAIN: string };
 export type Webhook = { GLOBAL?: GlobalWebhook; EVENTS: EventsWebhook };
 export type ConfigSessionPhone = { CLIENT: string; NAME: string };
 export type QrCode = { LIMIT: number; COLOR: string };
-export type Typebot = { API_VERSION: string };
+export type Typebot = { API_VERSION: string; KEEP_OPEN: boolean };
+export type Chatwoot = {
+  MESSAGE_DELETE: boolean;
+  MESSAGE_READ: boolean;
+  IMPORT: {
+    DATABASE: {
+      CONNECTION: {
+        URI: string;
+      };
+    };
+    PLACEHOLDER_MEDIA_MESSAGE: boolean;
+  };
+};
+
+export type CacheConf = { REDIS: CacheConfRedis; LOCAL: CacheConfLocal };
 export type Production = boolean;
 
 export interface Env {
@@ -148,12 +189,17 @@ export interface Env {
   RABBITMQ: Rabbitmq;
   SQS: Sqs;
   WEBSOCKET: Websocket;
+  WA_BUSINESS: WaBusiness;
   LOG: Log;
   DEL_INSTANCE: DelInstance;
+  DEL_TEMP_INSTANCES: boolean;
+  LANGUAGE: Language;
   WEBHOOK: Webhook;
   CONFIG_SESSION_PHONE: ConfigSessionPhone;
   QRCODE: QrCode;
   TYPEBOT: Typebot;
+  CHATWOOT: Chatwoot;
+  CACHE: CacheConf;
   AUTHENTICATION: Auth;
   PRODUCTION?: Production;
 }
@@ -177,10 +223,10 @@ export class ConfigService {
         ? this.envYaml()
         : this.envProcess();
     this.env.PRODUCTION = process.env?.NODE_ENV === 'PROD';
-//     if ((process.env?.DOCKER_ENV === 'true', process.env?.HEROKU_ENV === 'true')) {
-//       this.env.SERVER.TYPE = 'http';
-//       this.env.SERVER.PORT = parseInt(process.env.PORT) || 8080;
-//     }
+    if (process.env?.DOCKER_ENV === 'true') {
+      this.env.SERVER.TYPE = 'http';
+      this.env.SERVER.PORT = 8080;
+    }
   }
 
   private envYaml(): Env {
@@ -191,10 +237,8 @@ export class ConfigService {
     return {
       SERVER: {
         TYPE: process.env.SERVER_TYPE as 'http' | 'https',
-        PORT: Number.parseInt(process.env.SERVER_PORT || process.env.PORT) || 8080,
+        PORT: Number.parseInt(process.env.SERVER_PORT) || 8080,
         URL: process.env.SERVER_URL,
-        HIDE_INDEX: process.env?.SERVER_HIDE_INDEX === 'true',
-        HIDE_MANAGER: process.env?.SERVER_HIDE_MANAGER === 'true',
       },
       CORS: {
         ORIGIN: process.env.CORS_ORIGIN?.split(',') || ['*'],
@@ -210,6 +254,7 @@ export class ConfigService {
         MESSAGE_UP: process.env?.STORE_MESSAGE_UP === 'true',
         CONTACTS: process.env?.STORE_CONTACTS === 'true',
         CHATS: process.env?.STORE_CHATS === 'true',
+        LABELS: process.env?.STORE_LABELS === 'true',
       },
       CLEAN_STORE: {
         CLEANING_INTERVAL: Number.isInteger(process.env?.CLEAN_STORE_CLEANING_TERMINAL)
@@ -232,6 +277,7 @@ export class ConfigService {
           MESSAGE_UPDATE: process.env?.DATABASE_SAVE_MESSAGE_UPDATE === 'true',
           CONTACTS: process.env?.DATABASE_SAVE_DATA_CONTACTS === 'true',
           CHATS: process.env?.DATABASE_SAVE_DATA_CHATS === 'true',
+          LABELS: process.env?.DATABASE_SAVE_DATA_LABELS === 'true',
         },
       },
       REDIS: {
@@ -241,6 +287,8 @@ export class ConfigService {
       },
       RABBITMQ: {
         ENABLED: process.env?.RABBITMQ_ENABLED === 'true',
+        MODE: process.env?.RABBITMQ_MODE || 'isolated',
+        EXCHANGE_NAME: process.env?.RABBITMQ_EXCHANGE_NAME || 'evolution_exchange',
         URI: process.env.RABBITMQ_URI || '',
       },
       SQS: {
@@ -252,6 +300,12 @@ export class ConfigService {
       },
       WEBSOCKET: {
         ENABLED: process.env?.WEBSOCKET_ENABLED === 'true',
+      },
+      WA_BUSINESS: {
+        TOKEN_WEBHOOK: process.env.WA_BUSINESS_TOKEN_WEBHOOK || '',
+        URL: process.env.WA_BUSINESS_URL || '',
+        VERSION: process.env.WA_BUSINESS_VERSION || '',
+        LANGUAGE: process.env.WA_BUSINESS_LANGUAGE || 'en',
       },
       LOG: {
         LEVEL: (process.env?.LOG_LEVEL.split(',') as LogLevel[]) || [
@@ -267,7 +321,9 @@ export class ConfigService {
         COLOR: process.env?.LOG_COLOR === 'true',
         BAILEYS: (process.env?.LOG_BAILEYS as LogBaileys) || 'error',
       },
-      DEL_INSTANCE: process.env?.DEL_INSTANCE === 'true' ? 5 : Number.parseInt(process.env.DEL_INSTANCE) || false,
+      DEL_INSTANCE: isBooleanString(process.env?.DEL_INSTANCE)
+        ? process.env.DEL_INSTANCE === 'true'
+        : Number.parseInt(process.env.DEL_INSTANCE) || false,
       WEBHOOK: {
         GLOBAL: {
           URL: process.env?.WEBHOOK_GLOBAL_URL || '',
@@ -276,6 +332,8 @@ export class ConfigService {
         },
         EVENTS: {
           APPLICATION_STARTUP: process.env?.WEBHOOK_EVENTS_APPLICATION_STARTUP === 'true',
+          INSTANCE_CREATE: process.env?.WEBHOOK_EVENTS_INSTANCE_CREATE === 'true',
+          INSTANCE_DELETE: process.env?.WEBHOOK_EVENTS_INSTANCE_DELETE === 'true',
           QRCODE_UPDATED: process.env?.WEBHOOK_EVENTS_QRCODE_UPDATED === 'true',
           MESSAGES_SET: process.env?.WEBHOOK_EVENTS_MESSAGES_SET === 'true',
           MESSAGES_UPSERT: process.env?.WEBHOOK_EVENTS_MESSAGES_UPSERT === 'true',
@@ -291,6 +349,8 @@ export class ConfigService {
           CHATS_UPSERT: process.env?.WEBHOOK_EVENTS_CHATS_UPSERT === 'true',
           CHATS_DELETE: process.env?.WEBHOOK_EVENTS_CHATS_DELETE === 'true',
           CONNECTION_UPDATE: process.env?.WEBHOOK_EVENTS_CONNECTION_UPDATE === 'true',
+          LABELS_EDIT: process.env?.WEBHOOK_EVENTS_LABELS_EDIT === 'true',
+          LABELS_ASSOCIATION: process.env?.WEBHOOK_EVENTS_LABELS_ASSOCIATION === 'true',
           GROUPS_UPSERT: process.env?.WEBHOOK_EVENTS_GROUPS_UPSERT === 'true',
           GROUP_UPDATE: process.env?.WEBHOOK_EVENTS_GROUPS_UPDATE === 'true',
           GROUP_PARTICIPANTS_UPDATE: process.env?.WEBHOOK_EVENTS_GROUP_PARTICIPANTS_UPDATE === 'true',
@@ -313,6 +373,31 @@ export class ConfigService {
       },
       TYPEBOT: {
         API_VERSION: process.env?.TYPEBOT_API_VERSION || 'old',
+        KEEP_OPEN: process.env.TYPEBOT_KEEP_OPEN === 'true',
+      },
+      CHATWOOT: {
+        MESSAGE_DELETE: process.env.CHATWOOT_MESSAGE_DELETE === 'false',
+        MESSAGE_READ: process.env.CHATWOOT_MESSAGE_READ === 'false',
+        IMPORT: {
+          DATABASE: {
+            CONNECTION: {
+              URI: process.env.CHATWOOT_IMPORT_DATABASE_CONNECTION_URI || '',
+            },
+          },
+          PLACEHOLDER_MEDIA_MESSAGE: process.env?.CHATWOOT_IMPORT_PLACEHOLDER_MEDIA_MESSAGE === 'true',
+        },
+      },
+      CACHE: {
+        REDIS: {
+          ENABLED: process.env?.CACHE_REDIS_ENABLED === 'true',
+          URI: process.env?.CACHE_REDIS_URI || '',
+          PREFIX_KEY: process.env?.CACHE_REDIS_PREFIX_KEY || 'evolution-cache',
+          TTL: Number.parseInt(process.env?.CACHE_REDIS_TTL) || 604800,
+        },
+        LOCAL: {
+          ENABLED: process.env?.CACHE_LOCAL_ENABLED === 'true',
+          TTL: Number.parseInt(process.env?.CACHE_REDIS_TTL) || 86400,
+        },
       },
       AUTHENTICATION: {
         TYPE: process.env.AUTHENTICATION_TYPE as 'apikey',
