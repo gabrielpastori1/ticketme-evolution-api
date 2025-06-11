@@ -76,7 +76,7 @@
     "mediainfo.js": "^0.3.2",
     "mime": "^3.0.0",
     "minio": "^8.0.1",
-    "multer": "^1.4.5-lts.1",
+    "multer": "^2.0.1",
     "node-cache": "^5.1.2",
     "node-cron": "^3.0.3",
     "openai": "^4.52.7",
